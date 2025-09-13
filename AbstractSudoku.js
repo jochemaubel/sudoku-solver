@@ -27,8 +27,19 @@ const abstractSudoku = (_sudoku, cells, groups) => {
           console.log(`  → Naked Pairs/Triples eliminatie toegepast (iteratie ${iterationCount})`);
         }
       }
+
+      // Stap 3: Hidden Pairs/Triples eliminatie
+      const beforeHiddenSubGroup = cells.map(c => c.options.length).reduce((a,b) => a+b, 0);
+      _removeHiddenSubGroups(groups);
+      const afterHiddenSubGroup = cells.map(c => c.options.length).reduce((a,b) => a+b, 0);
+      if (beforeHiddenSubGroup > afterHiddenSubGroup) {
+        hasChanges = true;
+        if (logStrategies) {
+          console.log(`  → Hidden Pairs/Triples eliminatie toegepast (iteratie ${iterationCount})`);
+        }
+      }
       
-      // Stap 3: Box/Line Reduction eliminatie
+      // Stap 4: Box/Line Reduction eliminatie
       const beforeNumberOptions = cells.map(c => c.options.length).reduce((a,b) => a+b, 0);
       _removeNumberOptions(groups);
       const afterNumberOptions = cells.map(c => c.options.length).reduce((a,b) => a+b, 0);
@@ -114,18 +125,6 @@ const abstractSudoku = (_sudoku, cells, groups) => {
       moveNumber++;
       console.log(`\nZet ${moveNumber}:`);
       setOptions(true); // Log strategieën tijdens het zoeken
-      
-      // Debug: toon opties voor cel [6,5] bij zet 7
-      if (moveNumber === 7) {
-        const debugCell = getCell(5, 4); // [6,5] in 1-indexed = [5,4] in 0-indexed
-        console.log(`  DEBUG: Cel [6,5] heeft opties: [${debugCell.options.join(', ')}]`);
-        
-        // Toon ook alle cellen met hun opties
-        console.log("  DEBUG: Alle cellen met 1 optie (Naked Singles):");
-        cells.filter(cell => cell.options.length === 1).forEach(cell => {
-          console.log(`    [${cell.row + 1}, ${cell.col + 1}]: ${cell.options[0]}`);
-        });
-      }
       
       let move = findMove();
 
@@ -216,6 +215,16 @@ const _removeSubGroupOptions = (groups) => {
   while (hasChangedCells) {
     groups.forEach((group) => {
       group.removeSubGroupOptions();
+    });
+    hasChangedCells = groups.some((group) => group.cellsChanged.length > 0);
+  }
+};
+
+const _removeHiddenSubGroups = (groups) => {
+  let hasChangedCells = true;
+  while (hasChangedCells) {
+    groups.forEach((group) => {
+      group.removeHiddenSubGroups();
     });
     hasChangedCells = groups.some((group) => group.cellsChanged.length > 0);
   }

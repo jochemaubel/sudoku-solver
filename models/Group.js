@@ -106,13 +106,11 @@ class Group {
         }
         cell.setOptions(newCellOptions);
       });
-
-    // Hidden Pairs/Triples eliminatie
-    this.removeHiddenSubGroups();
   }
 
   removeHiddenSubGroups() {
     const remainingValues = this.remainingValues();
+    this.cellsChanged = [];
     
     // Groepeer cijfers per aantal mogelijke posities
     const valuePositions = new Map();
