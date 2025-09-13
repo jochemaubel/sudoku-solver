@@ -88,6 +88,7 @@ class Group {
   }
 
   removeSubGroupOptions() {
+    // Naked Pairs/Triples eliminatie
     const subGroupsCells = this.findSubGroups().flat();
     const subGroupOptions = subGroupsCells.reduce(
       (options, cell) => options.concat(cell.options),
@@ -105,6 +106,42 @@ class Group {
         }
         cell.setOptions(newCellOptions);
       });
+
+    // Hidden Pairs/Triples eliminatie
+    this.removeHiddenSubGroups();
+  }
+
+  removeHiddenSubGroups() {
+    const remainingValues = this.remainingValues();
+    
+    // Groepeer cijfers per aantal mogelijke posities
+    const valuePositions = new Map();
+    remainingValues.forEach(value => {
+      const possibleCells = this.cells.filter(cell => 
+        cell.options.includes(value)
+      );
+      if (possibleCells.length >= 2 && possibleCells.length <= 4) {
+        const key = possibleCells.map(c => `${c.row},${c.col}`).sort().join('|');
+        if (!valuePositions.has(key)) {
+          valuePositions.set(key, { cells: possibleCells, values: [] });
+        }
+        valuePositions.get(key).values.push(value);
+      }
+    });
+
+    // Zoek Hidden Pairs/Triples: aantal cijfers = aantal cellen
+    valuePositions.forEach(({ cells, values }) => {
+      if (values.length === cells.length && values.length >= 2) {
+        // Hidden subgroup gevonden! Elimineer andere opties uit deze cellen
+        cells.forEach(cell => {
+          const newOptions = cell.options.filter(option => values.includes(option));
+          if (newOptions.length < cell.options.length) {
+            this.cellsChanged.push(cell);
+            cell.setOptions(newOptions);
+          }
+        });
+      }
+    });
   }
 
   removeOption(cells, value) {
